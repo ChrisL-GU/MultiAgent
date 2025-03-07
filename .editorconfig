@@ -1,0 +1,29 @@
+[*]
+charset = utf-8
+end_of_line = crlf
+trim_trailing_whitespace = false
+insert_final_newline = false
+indent_style = space
+indent_size = 4
+
+# Custom
+
+csharp_style_unused_value_assignment_preference = discard_variable:error
+csharp_style_unused_value_expression_statement_preference = discard_variable:error
+
+# 'using' directive preferences
+csharp_using_directive_placement = inside_namespace:error
+
+dotnet_naming_rule.private_fields_no_prefix.symbols = private_fields
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_rule.private_fields_no_prefix.style = no_prefix_style
+dotnet_naming_style.no_prefix_style.capitalization = camel_case
+dotnet_naming_rule.private_fields_no_prefix.severity = error
+
+# https://github.com/dotnet/roslyn/issues/47066
+dotnet_diagnostic.CS8509.severity = error # missing switch case for named enum value
+dotnet_diagnostic.CS8524.severity = none # missing switch case for unnamed enum value
+
+# IDE0160: Convert to file-scoped namespace
+csharp_style_namespace_declarations = file_scoped:error

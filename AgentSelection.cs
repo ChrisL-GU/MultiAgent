@@ -11,17 +11,15 @@ public static class AgentSelection
 {
     public static KernelFunctionSelectionStrategy CreateSelectionStrategy(Kernel kernel,
         ChatHistoryTruncationReducer historyReducer,
-        ChatCompletionAgent toneConsistencyAgent,
-        ChatCompletionAgent apStylebookAgent,
-        ChatCompletionAgent verificationAgent) =>
+        EssayAgents essayAgents) =>
         new(CreateSelectionFunction(), kernel)
         {
-            InitialAgent = apStylebookAgent,
+            InitialAgent = essayAgents.InitialAgent,
             HistoryReducer = historyReducer,
             HistoryVariableName = "lastMessage",
             ResultParser = (result) =>
             {
-                var resultValue = result.GetValue<string>() ?? verificationAgent.Name ?? nameof(VerificationAgent);
+                var resultValue = result.GetValue<string>() ?? nameof(VerificationAgent);
                 Console.WriteLine($"selectionFunction: {resultValue}");
 
                 return resultValue;

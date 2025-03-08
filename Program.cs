@@ -24,25 +24,25 @@ internal class Program
             settings.AzureOpenAi.ApiKey);
 
 
-        var logger = new InMemoryLogger();
         var kernel = builder.Build();
 
-        var apStylebookAgent = ApStylebookAgent.CreateAgent(kernel);
-        var verificationAgent = VerificationAgent.CreateAgent(kernel);
-        var toneConsistencyAgent = ToneConsistencyAgent.CreateAgent(kernel);
-        var historyReducer = new ChatHistoryTruncationReducer(3);
+        var agents = new EssayAgents(kernel);
         
-        AgentGroupChat chat =
-          new(apStylebookAgent, toneConsistencyAgent, verificationAgent)
+        var chat =
+          new AgentGroupChat(agents.GetAgents())
           {
             ExecutionSettings = new AgentGroupChatSettings
             {
-                SelectionStrategy = AgentSelection.CreateSelectionStrategy(kernel, historyReducer, apStylebookAgent, toneConsistencyAgent, verificationAgent),
-                TerminationStrategy = ChatTermination.CreateTerminationStrategy(kernel, historyReducer, verificationAgent)
+                SelectionStrategy = new SequentialSelectionStrategy(),
+                TerminationStrategy = new ApprovalTerminationStrategy()
+                {
+                    Agents = [agents.FinalAgent],
+                    MaximumIterations = agents.GetAgents().Length // * 3,
+                }
             }
           };
         
-        chat.AddChatMessage(new ChatMessageContent(AuthorRole.User, TextToAnalyze.GuText));
+        chat.AddChatMessage(new ChatMessageContent(AuthorRole.User, TextToAnalyze.PaulGraham));
         chat.IsComplete = false;
         
         await foreach (var chatMessageContent in chat.InvokeAsync())
@@ -52,22 +52,27 @@ internal class Program
                 $"{Environment.NewLine}{chatMessageContent.Content}{Environment.NewLine}");
         }
     }
-    
-    public void ConfigureServices(IServiceCollection services)
+}
+
+internal sealed class ApprovalTerminationStrategy : TerminationStrategy
+{
+    protected override Task<bool> ShouldAgentTerminateAsync(Agent agent, IReadOnlyList<ChatMessageContent> history, CancellationToken cancellationToken)
+        => Task.FromResult(history[^1].Content?.Contains("perfecto", StringComparison.OrdinalIgnoreCase) ?? false);
+}
+public class EssayAgents
+{
+    private readonly ChatCompletionAgent apStylebookAgent;
+    private readonly ChatCompletionAgent verificationAgent;
+    private readonly ChatCompletionAgent toneConsistencyAgent;
+
+    public EssayAgents(Kernel kernel)
     {
-        var loggerProvider = new InMemoryLoggerProvider();
-        services.AddSingleton<ILoggerProvider>(loggerProvider);
-        services.AddSingleton(loggerProvider.Logger);
+        apStylebookAgent = ApStylebookAgent.CreateAgent(kernel);
+        verificationAgent = VerificationAgent.CreateAgent(kernel);
+        toneConsistencyAgent = ToneConsistencyAgent.CreateAgent(kernel);
     }
     
-    public class InMemoryLoggerProvider : ILoggerProvider
-    {
-        private readonly InMemoryLogger logger = new();
-    
-        public ILogger CreateLogger(string categoryName) => logger;
-    
-        public void Dispose() { }
-    
-        public InMemoryLogger Logger => logger;
-    }
+    public Agent[] GetAgents() => [apStylebookAgent, toneConsistencyAgent];
+    public Agent InitialAgent => apStylebookAgent;
+    public Agent FinalAgent => toneConsistencyAgent;
 }

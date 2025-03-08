@@ -16,6 +16,21 @@ internal class Program
 {
     public static async Task Main(string[] args)
     {
+        string json = @"{
+            ""feedback"": [
+                {
+                    ""originalText"": ""in a couple decades there won't be many people who can write."",
+                    ""recommendation"": ""Always use 'of' with 'a couple' constructions to link the phrase to a noun (AP Stylebook)."",
+                    ""explanation"": ""The omission of 'of' is a violation of AP style because the correct form is 'a couple of decades.'""
+                }
+            ]
+        }";
+        
+        var feedbackResponse = JsonSerializer.Deserialize<FeedbackResponse>(
+            json, 
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        
+        
         Settings settings = new();
         var builder = Kernel.CreateBuilder();
 
@@ -49,11 +64,13 @@ internal class Program
         {
             var response = chatMessageContent.Content ?? "";
             var detectionContent = response.GetBetween("<essay_analysis>", "</essay_analysis>").Trim();
-            var jsonContent = response.GetBetween("json```", "```").Trim();
+            var jsonContent = response.GetBetween("```json", "```").Trim();
             chatResponse.Add(new (
                 chatMessageContent.AuthorName ?? "Unknown",
                 detectionContent,
-                JsonSerializer.Deserialize<FeedbackResponse>(jsonContent)?.Feedback ?? []));
+                JsonSerializer.Deserialize<FeedbackResponse>(
+                    jsonContent,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })?.Feedback ?? []));
         }
 
         Console.WriteLine(chatResponse.Count);

@@ -21,7 +21,7 @@ public static class ApStylebookAgent
         6. Format your final response as a JSON object.
         
         Before providing your final JSON response, wrap your thought process in
-        <ap_style_analysis> tags. In this analysis:
+        <essay_analysis> tags. In this analysis:
         - Go through the text sentence by sentence, numbering each one.
         - For each sentence, state whether it contains any potential AP style violations.
         - If a potential violation is found, quote the relevant part of the AP Stylebook to

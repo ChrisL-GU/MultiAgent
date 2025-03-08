@@ -31,7 +31,7 @@ public static class ToneConsistencyAgent
          8. Highlight both strengths and weaknesses in tone management.
          
          Before providing your final output, wrap your detailed evaluation inside
-         <detailed_tone_evaluation> tags. In this section:
+         <essay_analysis> tags. In this section:
          
          1. List the overall intended tone of the essay you've identified.
          2. For each paragraph:
